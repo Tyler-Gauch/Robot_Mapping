@@ -3,12 +3,20 @@ package com.mapping.main;
 import java.awt.Graphics;
 import java.util.ArrayList;
 
+
+/*
+ * This object holds the information for RANSAC to extract lines from the lidar points
+ */
+
 public class LineModel extends Model{
-	public double a;
-	public double b;
-	public double c;
-	public int maxX = 0, minX = 0, maxY = 0, minY = 0;
+	public double a;	//line equation
+	public double b;	//line equation
+	public double c;	//line equation
+	public int maxX = 0, minX = 0, maxY = 0, minY = 0; //endpoints
 	
+	/*
+	 * Given an x value its the point on that line
+	 */
 	public int getPointOnLine(int x)
 	{
 		double slope = -a/b;
@@ -30,6 +38,9 @@ public class LineModel extends Model{
 		return (int)y;
 	}
 	
+	/*
+	 * draws the given line on the Map
+	 */
 	@Override
 	public void draw(Graphics g, Map m)
 	{
@@ -62,6 +73,10 @@ public class LineModel extends Model{
 				m.convertToGlobalPoint(y2, false));
 	}
 
+	
+	/*
+	 * Uses the Least Squares Approximation to fit a line to a set points
+	 */
 	@Override
 	public double fit(ArrayList<DataPoint> points) {
 		int n = points.size();
@@ -106,10 +121,14 @@ public class LineModel extends Model{
 		return r2;
 	}
 	
+	/*
+	 * Returns the Distance of a point to the line
+	 */
 	public int getDistance(int x, int y)
 	{
 		return (int)((Math.abs(a*x + b*y + c))/(Math.sqrt(a*a + b*b)));
 	}
+	
 	
 	@Override
 	public void setInliers(ArrayList<DataPoint> inliers)
@@ -119,6 +138,9 @@ public class LineModel extends Model{
 		findEndPoints(false);
 	}
 	
+	/*
+	 * Finds the end points min and max of the line in the global system
+	 */
 	public void findEndPoints(boolean isX)
 	{
 		int i = 0;
@@ -153,7 +175,9 @@ public class LineModel extends Model{
 			i++;
 		}
 	}
-	
+	/*
+	 *If the line equation is the same the line is the same
+	 */
 	@Override
 	public boolean equals(Model m)
 	{

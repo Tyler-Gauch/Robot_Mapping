@@ -5,17 +5,21 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
+/*
+ * This class holds the information for the landmarks extracted by RANSAC
+ */
+
 public class Landmark {
 
-	private LineModel model;
-	private Point maxEndPoints;
-	private Point minEndPoints;
-	private int timesFound;
-	public static ArrayList<Landmark> allLandmarks = new ArrayList<Landmark>();
-	public static ArrayList<Landmark> bestLandmarks = new ArrayList<Landmark>();
-	public static final int BEST_LANDMARK_THRESHOLD = 15;
-	public UUID uuid;
-	private boolean isBestLandmark;
+	private LineModel model;		//The current Model that the landmark is of
+	private Point maxEndPoints;		//The Max end points x and y of the landmark in the global system
+	private Point minEndPoints;		//the min endpoints x and y of the landmark in the global system
+	private int timesFound;			//how many times we have seen this landmark
+	public UUID uuid;				//the unique identifier for this landmark
+	private boolean isBestLandmark;	//if this is a best landmark or not
+	public static ArrayList<Landmark> allLandmarks = new ArrayList<Landmark>(); //list of all found landmarks
+	public static ArrayList<Landmark> bestLandmarks = new ArrayList<Landmark>();//list of all landmarks that were seen enough to be considered best landmarks
+	public static final int BEST_LANDMARK_THRESHOLD = 15;	//how many times we need to see a landmark for it to be considered a best landmark
 	private static boolean debug = false;
 	
 	public Landmark(LineModel m)
@@ -71,6 +75,10 @@ public class Landmark {
 		return this.uuid;
 	}
 	
+	/*
+	 * given a line model it will find a landmark in the list of all landmarks that has that line model
+	 * or create a new landmark
+	 */
 	public static Landmark findOrCreateLandmark(LineModel line)
 	{
 		for(Landmark landmark : allLandmarks)
@@ -98,6 +106,9 @@ public class Landmark {
 		}
 	}
 	
+	/*
+	 * Removes a landmark from both lists of landmarks
+	 */
 	public static void removeLandMark(Landmark landmark)
 	{
 		for(int i = 0; i < Landmark.bestLandmarks.size(); i++)

@@ -1,5 +1,10 @@
 package com.mapping.main;
 
+/*
+ * This is a data class that holds the point and angle of the 
+ * Data Point from the lidar readings
+ */
+
 public class DataPoint {
 	public int x;
 	public int y;

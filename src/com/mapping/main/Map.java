@@ -14,6 +14,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+
+/*
+ * Visualization Class that draws the points, lines, and Landmarks in a 2d Space.
+ */
 public class Map extends JPanel implements ActionListener
 {
 

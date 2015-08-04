@@ -10,6 +10,9 @@ import gnu.io.SerialPortEventListener;
 import java.util.Enumeration;
 
 
+/*
+ * Handles the serial communication between the arduino and the computer
+ */
 public class SerialTest implements SerialPortEventListener {
 	SerialPort serialPort;
 	public String lastResponse;

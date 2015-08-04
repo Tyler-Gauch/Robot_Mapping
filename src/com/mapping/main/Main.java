@@ -43,6 +43,9 @@ public class Main extends JFrame
 		this.pack();
 	}	
 
+	/*
+	 * This is the main loop to retrieve and parse the incoming Lidar serial data
+	 */
 	public void refresh()
 	{
 		ransac.start();
@@ -77,6 +80,9 @@ public class Main extends JFrame
 		}
 	}
 	
+	/*
+	 * The following are just various test functions
+	 */
 	public void testLines()
 	{
 		this.serial.close();
@@ -180,6 +186,9 @@ public class Main extends JFrame
 		return this.ransac;
 	}
 	
+	/*
+	 * Given the hypotenuse and the angle it finds the x and y coordinates of the point 
+	 */
 	public Point findXY(double hy, double angle)
 	{
 		Point p = new Point();

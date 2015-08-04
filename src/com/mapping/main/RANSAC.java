@@ -3,57 +3,72 @@ package com.mapping.main;
 import java.util.ArrayList;
 import java.util.Random;
 
+/*
+ * This runs the RANSAC Algorithm on the Lidar Points
+ */
 public class RANSAC extends Thread{
 	
-	public ArrayList<Model> bestModels;
-	public ArrayList<DataPoint> bestInliers;
-	public double maxEvaluations = 1000;
-	public double maxSamplings = 50;
-	public double probability = .95;
-	public static int minConsensus = 30;
-	public static int minSameLineDistance = 50;
-	public static int sameSampleThreshold = 10;
-	public static int s = 5;
-	public static double t = 5;
+	public ArrayList<Model> bestModels;		//A list of the Best models that have been found
+	public double maxEvaluations = 1000;	//How man iterations to run
+	public double maxSamplings = 50;		//How many samples to retrieve in each run
+	public double probability = .95;		//probability of inliers
+	public static int minConsensus = 30;	//The minimum number of points for it to be considered a landmark
+	public static int minSameLineDistance = 50;	//The minimum distance 2 landmarks need to be from each other to be considered the same land mark
+	public static int sameSampleThreshold = 10; //the minimum average distance between points to add the point to the sample
+	public static int s = 5;					//the minimum number of points in a sample
+	public static double t = 5;					//the max distance a point can be from a line to be considered an inlier
 	public boolean debug = false;
-	public static ArrayList<DataPoint> map;
-	private static int delay = 10;
-	public Model m;
-	private ArrayList<ArrayList<DataPoint>> usedSets = new ArrayList<ArrayList<DataPoint>>();
+	public static ArrayList<DataPoint> map;		//a list to hold all current points
+	private static int delay = 10;				//delay of the thread
+	public Model m;								//the type of model we are looking for
+	private ArrayList<ArrayList<DataPoint>> usedSets; //a list to hold all the sets we have used
 	
 	
 	public RANSAC(Model m)
 	{
 		this.m = m;
 		bestModels = new ArrayList<Model>();
-		bestInliers = new ArrayList<DataPoint>();
+		usedSets = new ArrayList<ArrayList<DataPoint>>();
 	}
 	
+	
+	/*
+	 * The main loop for the ransac algorithm
+	 */
 	public void run()
 	{
+		//Waits while we don't have enough points to get a model
 		while(Map.currentPoints < minConsensus)
 		{
 			try {
-				Thread.sleep(10);
+				Thread.sleep(delay);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		//creates the list
 		map = new ArrayList<DataPoint>();
+		//Gets the current points in from the lidar
 		DataPoint[] points = this.getPoints();
 		int lastPointSize = 0;
 		Random r = new Random();
 		r.setSeed(System.currentTimeMillis());
+		
+		//The main loop
 		while(true)
 		{
+			//Clears all current best models from previous runs
 			bestModels.clear();
+			//Clears all current used sets from previous runs
+			usedSets.clear();
 			int maxInliers = 0;
 			this.print("Init");
 			int count = 0;
 			double N = maxEvaluations;
 			Model bestModel = null;
 			map.clear();
+			//finds all non null points
 			for(int i = 0; i < points.length; i++)
 			{
 				if(points[i] != null && !points[i].in_ransac)
@@ -61,6 +76,7 @@ public class RANSAC extends Thread{
 					map.add(points[i]);
 				}
 			}
+			//if we don't have enough points to make a model get a new set of points
 			if(map.size() <= minConsensus || map.size() == lastPointSize)
 			{
 				print("Gathering new points: " + map.size() + " " + lastPointSize);
@@ -72,6 +88,7 @@ public class RANSAC extends Thread{
 			{
 				lastPointSize = map.size();
 			}
+			//loop and find the models
 			while(count < N && count < maxEvaluations)
 			{
 				this.print("LOOP: " + count + " N: " + N + " MAX: " + maxEvaluations + " POINT SIZE: "+map.size());
@@ -87,7 +104,7 @@ public class RANSAC extends Thread{
 					System.err.println("Model "+m.getClass().getName()+" is not implemented");
 					break;
 				}
-				
+				//get a sample set
 				while(samplings < maxSamplings)
 				{
 					double averageDistance = 0;
@@ -110,25 +127,32 @@ public class RANSAC extends Thread{
 						//}
 					}
 					
+					//make sure this set wasn't used before
 					if(!degenerate(sample))
 					{
+						//add the set to used sets
 						this.usedSets.add(sample);
+						//fit a line to the sample
 						model.fit(sample);
 						break;
 					}
 					
 					samplings++;
 				}
+				//find the inliers for the model we fit
 				this.print("Finding Inliers");
 				ArrayList<DataPoint> inliers = new ArrayList<DataPoint>();
 				for(int i = 0; i < map.size(); i++)
 				{
+					//if the distance from the line is less than t then we have an inlier
 					if(model.getDistance(map.get(i).x,map.get(i).y) <= t)
 					{
 						inliers.add(map.get(i));
 					}
 				}
 				print("INLIERS: "+inliers.size());
+				
+				//if the amount of inliers is more than our last model update our bestModel
 				if(inliers.size() > maxInliers && inliers.size() >= minConsensus)
 				{
 					this.print("More Inliers: " + inliers.size());
@@ -137,9 +161,11 @@ public class RANSAC extends Thread{
 					model.setInliers(inliers);
 					bestModel = model;
 					bestModel.fit(bestModel.getInliers());
+					//mark the landmark as found
 					Landmark landmark = Landmark.findOrCreateLandmark((LineModel)bestModel);
 					landmark.found();
 					
+					//recalulate the probability of the number of loops we need to do
 					double pInlier = (double)inliers.size()/ (double)map.size();
 					double pNoOutliers = 1.0 - Math.pow(pInlier, s);
 					
@@ -153,8 +179,10 @@ public class RANSAC extends Thread{
 				count++;
 				
 			}
+			
 			if(bestModel != null)
 			{
+				//remove the points that are inliers to that line
 				for(int i = 0; i < bestModel.getInliers().size(); i++)
 				{
 					DataPoint d = bestModel.getInliers().get(i);
@@ -162,6 +190,7 @@ public class RANSAC extends Thread{
 					points[d.angle] = null;
 				}
 				//check distance between this and other models we already have and see if it is the same model
+				//if so update the model with the proper set of inliers and refit the model
 				boolean found = false;
 				for(Landmark landmark0 : Landmark.allLandmarks)
 				{
@@ -223,6 +252,9 @@ public class RANSAC extends Thread{
 		}
 	}
 	
+	/*
+	 * Checks if the sample set has already been used
+	 */
 	public boolean degenerate(ArrayList<DataPoint> sample)
 	{
 		this.print("Checking Degenerate");
@@ -263,6 +295,9 @@ public class RANSAC extends Thread{
 			System.out.println(message);
 		}
 	}
+	/*
+	 * Gets the current set of points from the lidar data
+	 */
 	public DataPoint[] getPoints()
 	{
 		print("GET POINTS CALLED");
