@@ -91,19 +91,38 @@ public class Main extends JFrame
 		int points = 181/8;
 		Random r = new Random();
 		r.setSeed(System.currentTimeMillis());
-		for(int i = 0; i < 4; i++)
+		int m = r.nextInt(9)+1;
+		int b = r.nextInt(10);
+		for(int j = -points; j < points; j++, angle++)
 		{
-			int m = r.nextInt(9)+1;
-			int b = r.nextInt(10);
-			for(int j = -points; j < points; j++, angle++)
-			{
-				int y = m*j + b;
-				this.map.addPoint(new Point(j,y), angle);
-				this.repaint();
-			}
+			int y = m*j + b;
+			this.map.addPoint(new Point(j,y), angle);
+			this.repaint();
 		}
+		boolean right = true;
+		int vol = 5;
 		while(true)
 		{
+			for(int i = 0; i < Map.points.length; i++)
+			{
+				if(Map.points[i] == null)
+				{
+					break;
+				}
+				if(Map.points[i].x >= this.map.getW()-500 && right)
+				{
+					vol = -vol;
+					right = false;
+					System.out.println("Direction Switched to Left "+vol);
+				}
+				else if(Map.points[i].x <= -(this.map.getW()-500) && !right)
+				{
+					right = true;
+					vol = -vol;
+					System.out.println("Direction Switched to right "+vol);
+				}
+				Map.points[i].x += vol;
+			}
 			this.repaint();
 			try
 			{
@@ -272,7 +291,7 @@ public class Main extends JFrame
 		});
 		m.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		m.setVisible(true);
-		//m.refresh();
-		m.testLines();
+		m.refresh();
+		//m.testLines();
 	}
 }

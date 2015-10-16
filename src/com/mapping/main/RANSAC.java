@@ -202,7 +202,7 @@ public class RANSAC extends Thread{
 					double distance2 = getDistanceBetweenPoints(x2, l.getPointOnLine(x2), x2, l2.getPointOnLine(x2));
 					double distanceAverage = (distance1+distance2)/2;
 					if(distanceAverage <= minSameLineDistance + 10)
-						System.out.println(distanceAverage+"");
+						//System.out.println(distanceAverage+"");
 					if(distanceAverage <= RANSAC.minSameLineDistance)
 					{
 						Map.linesBeingCheckd[0] = l;
@@ -210,7 +210,7 @@ public class RANSAC extends Thread{
 						//these are the same line
 						//we found this line more than once
 						//remove last created landmark
-						System.out.println("===========THESE ARE THE SAME LINES=======");
+						//System.out.println("===========THESE ARE THE SAME LINES=======");
 						Landmark landmark;
 						Landmark landmark2;
 						landmark = Landmark.findOrCreateLandmark(l);
